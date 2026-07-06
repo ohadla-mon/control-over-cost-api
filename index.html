@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metering 2.0 – §07 &amp; §08 Cost API</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: #1a1a2e;
+      background: #f7f8fc;
+    }
+
+    /* ── Layout ── */
+    .page-header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 48px 40px 36px;
+    }
+    .page-header .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #8b9cd4;
+      margin-bottom: 10px;
+    }
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: #fff;
+    }
+    .page-header p {
+      margin-top: 10px;
+      color: #a8b4d8;
+      max-width: 680px;
+      font-size: 14.5px;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 32px 80px;
+    }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: 56px;
+    }
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #6b7aab;
+      margin-bottom: 6px;
+    }
+    .section > h2 {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      color: #1a1a2e;
+      border-bottom: 2px solid #e3e8f5;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .section > p, .section > ul {
+      color: #3a3f5c;
+      margin-bottom: 16px;
+      max-width: 780px;
+    }
+
+    /* ── Subsection ── */
+    .subsection {
+      margin-bottom: 40px;
+    }
+    .subsection h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 12px;
+    }
+    .subsection > p {
+      color: #3a3f5c;
+      margin-bottom: 14px;
+      max-width: 780px;
+    }
+
+    /* ── Endpoint block ── */
+    .endpoint {
+      margin-bottom: 36px;
+      border: 1px solid #dde3f3;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #1a1a2e;
+      padding: 12px 20px;
+    }
+    .method {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 4px;
+      background: #3d84f7;
+      color: #fff;
+    }
+    .method.post { background: #2ebc8e; }
+    .endpoint-path {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 14px;
+      color: #e8edf8;
+      font-weight: 600;
+    }
+    .endpoint-body {
+      padding: 20px 20px 4px;
+      background: #fff;
+    }
+    .endpoint-body > p {
+      color: #3a3f5c;
+      margin-bottom: 14px;
+      font-size: 14px;
+    }
+
+    /* ── Tables ── */
+    .table-wrap {
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead tr {
+      background: #eef1fb;
+    }
+    thead th {
+      text-align: left;
+      padding: 9px 14px;
+      font-weight: 700;
+      color: #3a3f5c;
+      border-bottom: 2px solid #d4daee;
+      white-space: nowrap;
+    }
+    tbody tr:nth-child(even) { background: #f7f8fc; }
+    tbody tr:hover { background: #eef1fb; }
+    tbody td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #e8ecf7;
+      vertical-align: top;
+      color: #3a3f5c;
+    }
+    tbody td:first-child { font-weight: 600; color: #1a1a2e; }
+    code.inline {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      background: #eef1fb;
+      border: 1px solid #d4daee;
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #3d84f7;
+    }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #1a1a2e;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .code-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #6b7aab;
+      background: #12122a;
+      padding: 7px 16px;
+      border-bottom: 1px solid #2a2a48;
+    }
+    .code-block pre {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #c9d6ff;
+      padding: 16px 18px;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* ── Info / note ── */
+    .note {
+      display: flex;
+      gap: 12px;
+      background: #fffbea;
+      border: 1px solid #f5d94a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .note-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .note p {
+      font-size: 13.5px;
+      color: #5a4a00;
+    }
+
+    /* ── Param rows ── */
+    .params {
+      margin-bottom: 20px;
+    }
+    .params h4 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #6b7aab;
+      margin-bottom: 10px;
+    }
+
+    /* ── Axis cards ── */
+    .axis-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 620px) { .axis-grid { grid-template-columns: 1fr; } }
+    .axis-card {
+      background: #fff;
+      border: 1px solid #dde3f3;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .axis-card h4 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #6b7aab;
+      margin-bottom: 6px;
+    }
+    .axis-card p {
+      font-size: 13.5px;
+      color: #3a3f5c;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #9ba4c7;
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="label">Metering 2.0 · Product Requirements</div>
+  <h1>Contract Against Product Metering</h1>
+  <p>We consume product metering's data — we don't dictate how it's stored, only that the read contract supports filtering, grouping, and sorting on every first-class dimension. Mechanics stay metering's call.</p>
+</header>
+
+<main>
+
+  <!-- ═══════════════════════════════════════════════
+       §07  Read contract
+  ═══════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-number">Section 07</div>
+    <h2>Read Contract &amp; API Reference</h2>
+
+    <!-- 7.1 Supported Filters -->
+    <div class="subsection">
+      <h3>7.1 &nbsp;Supported Filters</h3>
+      <p>The current page filters by user only — feedback was that this is far too thin. Each filter below must compose with AND, be deep-linkable, and be saveable as a set. Every one maps to a first-class field so it stays fast at account scale.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Filter</th><th>Maps to</th><th>Why we need it</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Billing cycle</td><td><code class="inline">billing_cycle</code></td><td>Scope every view to the right cycle</td></tr>
+            <tr><td>Date range</td><td><code class="inline">date_from</code> · <code class="inline">date_to</code></td><td>An explicit window, independent of billing cycle</td></tr>
+            <tr><td>Feature</td><td><code class="inline">feature</code></td><td>The pie; one credit language</td></tr>
+            <tr><td>User (who's charged)</td><td><code class="inline">user_id</code></td><td>Today's single billing field</td></tr>
+            <tr><td>Entity (type + id)</td><td><code class="inline">entity_type</code> · <code class="inline">entity_id</code></td><td>The feature's main object — a board, workflow, automation, agent, item…</td></tr>
+            <tr><td>Trigger (type + id)</td><td><code class="inline">trigger_type</code> · <code class="inline">trigger_id</code></td><td>What caused it — a user, workflow, board, agent…</td></tr>
+            <tr><td>Over-limit users only</td><td><code class="inline">total</code> vs. <code class="inline">limit</code></td><td>Governance triage</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>Dimension filters</strong> &nbsp;— Everything else lives in each feature's dimensions (§05) rather than the core record, so this list is illustrative, not exhaustive — it grows as features add dimensions. Same rule: filterable and groupable only once first-class.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Filter</th><th>Maps to</th><th>Why we need it</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Agent</td><td><code class="inline">agent_id</code></td><td>Drill into a specific agent's runs</td></tr>
+            <tr><td>App</td><td><code class="inline">app_id</code></td><td>Drill into a specific app's usage</td></tr>
+            <tr><td>Column</td><td><code class="inline">column_id</code></td><td>Drill into a specific AI column</td></tr>
+            <tr><td>Column type</td><td><code class="inline">column_type</code></td><td>Which AI operation — translate, summarize, generate…</td></tr>
+            <tr><td>Object / item / meeting</td><td><code class="inline">object_id</code></td><td>Trace to the concrete object</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>Search</strong> is a single typeahead that resolves names to IDs (board, workflow, agent, user, item, meeting) and applies the matching ID filter — so an admin can type a board name and land on that board's spend without knowing its ID.</p>
+    </div>
+
+    <!-- 7.2 Aggregation -->
+    <div class="subsection">
+      <h3>7.2 &nbsp;Aggregation, Grouping &amp; Pagination</h3>
+      <p>Every request to the contract is the same pipeline — <strong>filter → group → sort → paginate</strong> — and the four axes below compose freely. How payments computes the result (pre-aggregated rollups, on-the-fly, cache) is its call; the requirement is what each axis supports, plus speed at account scale.</p>
+
+      <div class="axis-grid">
+        <div class="axis-card">
+          <h4>Filter</h4>
+          <p>Every filter from §7.1 — core or dimension — AND'd together and applied first, so an aggregate only ever sums the rows a filtered view would show.</p>
+        </div>
+        <div class="axis-card">
+          <h4>Group by</h4>
+          <p>Zero or more dimensions, combined freely: <code class="inline">feature</code>, <code class="inline">user_id</code>, <code class="inline">entity_id</code>, <code class="inline">trigger_type</code>, or a date bucket (<code class="inline">day / week / month</code>). Zero dimensions returns one grand-total row.</p>
+        </div>
+        <div class="axis-card">
+          <h4>Sort by</h4>
+          <p>Any dimension in the current group-by, or the metric itself (<code class="inline">credits</code>, <code class="inline">count</code>) — ascending or descending. Changing the group-by or sort resets the pagination cursor.</p>
+        </div>
+        <div class="axis-card">
+          <h4>Paginate</h4>
+          <p>A stable keyset cursor over the grouped, sorted result. Accounts run to tens of thousands of rows — no deep-page slowdown.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <div class="note-icon">ℹ️</div>
+        <p><strong>Refunds net correctly.</strong> A refund is a negative credits event and must net into every total, at every grain — so a corrected charge shows the true figure everywhere without special-casing on the surface.</p>
+      </div>
+    </div>
+
+    <!-- 7.3 Read API Endpoint Reference -->
+    <div class="subsection">
+      <h3>7.3 &nbsp;Read API Endpoint Reference</h3>
+      <p>Three endpoints, not five — <code class="inline">/credits/query</code> is one flexible aggregate endpoint parameterized by <code class="inline">group_by</code>, so the pie, the per-user list, the per-user-per-feature split, each feature's entity table, top owners, and the time-series trend are all the same endpoint with a different filter/group-by/sort combination. All three share account-scoped auth, rate limits, and the full §7.1 filter grammar.</p>
+
+      <!-- GET /credits/account -->
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method">GET</span>
+          <span class="endpoint-path">/credits/account</span>
+        </div>
+        <div class="endpoint-body">
+          <p>The account's entitlement snapshot — total, used, and left for the cycle. The source for "credits remaining" in §4.2.</p>
+
+          <div class="params">
+            <h4>Query Parameters</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Param</th><th>Notes</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="inline">billing_cycle</code></td><td>Optional — defaults to the account's current cycle</td></tr>
+                  <tr><td><code class="inline">date_from</code>, <code class="inline">date_to</code></td><td>Optional — when given, switches the response to range mode</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-label">Response — default (no date range)</div>
+            <pre>{
+  "total_credits": 50000,
+  "credits_used":  32180,
+  "credits_left":  17820,
+  "reset_date":    "2026-08-01"
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-label">Response — range mode (date_from / date_to set)</div>
+            <pre>{
+  "credits_used": 4310  // just this window
+}</pre>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Axis</th><th>Behaviour</th></tr></thead>
+              <tbody>
+                <tr><td>Groups by</td><td>N/A — one account-level row, not a list</td></tr>
+                <tr><td>Sorts by</td><td>N/A</td></tr>
+                <tr><td>Filters by</td><td><code class="inline">billing_cycle</code>, or a date range to narrow usage to that window only</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- POST /credits/query -->
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/credits/query</span>
+        </div>
+        <div class="endpoint-body">
+          <p>One flexible aggregate endpoint — any combination of filters + group-by + sort. This is the pie, the per-user list, the per-user-per-feature split, each feature's entity table, top owners, and the time-series trend — same endpoint, different <code class="inline">group_by</code>. POST because the body carries arrays, not just scalar params.</p>
+
+          <div class="params">
+            <h4>Request Body</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Field</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="inline">filters</code></td><td>Object — any combination of §7.1 fields (<code class="inline">feature</code>, <code class="inline">user_id</code>, <code class="inline">board_id</code>, <code class="inline">workflow_id</code>, <code class="inline">automation_id</code>, <code class="inline">agent_id</code>, <code class="inline">app_id</code>, <code class="inline">column_id</code>, <code class="inline">object_id</code>, <code class="inline">trigger_type</code>, <code class="inline">trigger_id</code>, <code class="inline">over_limit</code>), AND'd together. <code class="inline">billing_cycle</code> or <code class="inline">date_from</code>/<code class="inline">date_to</code> scopes the window.</td></tr>
+                  <tr><td><code class="inline">group_by</code></td><td>Array, zero or more of: <code class="inline">feature</code>, <code class="inline">user_id</code>, <code class="inline">entity_id</code>, <code class="inline">trigger_type</code>, <code class="inline">date:day</code> | <code class="inline">date:week</code> | <code class="inline">date:month</code>. Empty array returns one grand-total row.</td></tr>
+                  <tr><td><code class="inline">sort</code></td><td>Array of <code class="inline">{field, order}</code> — field must be a requested group_by dimension or <code class="inline">credits</code>/<code class="inline">count</code>; order = <code class="inline">asc</code>|<code class="inline">desc</code>. Multiple entries compose in order given.</td></tr>
+                  <tr><td><code class="inline">cursor</code>, <code class="inline">limit</code></td><td>Keyset pagination over the grouped, sorted result. Changing <code class="inline">group_by</code> or <code class="inline">sort</code> resets the cursor.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-label">Example — top owners for one feature</div>
+            <pre>{
+  "filters":  { "feature": "ai_workflows", "billing_cycle": "2026-07" },
+  "group_by": ["user_id"],
+  "sort":     [{ "field": "credits", "order": "desc" }]
+}</pre>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Axis</th><th>Behaviour</th></tr></thead>
+              <tbody>
+                <tr><td>Groups by</td><td>Fully client-specified via <code class="inline">group_by</code> — any dimension, any combination</td></tr>
+                <tr><td>Sorts by</td><td>Fully client-specified via <code class="inline">sort</code> — any grouped field or the metric</td></tr>
+                <tr><td>Filters by</td><td>Every §7.1 filter, freely combined</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- GET /credits/events -->
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method">GET</span>
+          <span class="endpoint-path">/credits/events</span>
+        </div>
+        <div class="endpoint-body">
+          <p>Event-level raw rows behind one drawer — individual runs, items, steps, meetings, or endpoint calls. Not an aggregate, so it stays separate from <code class="inline">/credits/query</code>.</p>
+
+          <div class="params">
+            <h4>Query Parameters</h4>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Param</th><th>Notes</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="inline">feature</code>, <code class="inline">entity_id</code></td><td>Required — which row's drawer this is</td></tr>
+                  <tr><td><code class="inline">billing_cycle</code>, <code class="inline">trigger_type</code>, <code class="inline">trigger_id</code></td><td>Optional, narrows further</td></tr>
+                  <tr><td><code class="inline">sort</code>, <code class="inline">order</code></td><td><code class="inline">sort</code> = <code class="inline">occurred_at</code>|<code class="inline">credits</code>, defaults to most-recent-first</td></tr>
+                  <tr><td><code class="inline">cursor</code>, <code class="inline">limit</code></td><td>Keyset pagination</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Axis</th><th>Behaviour</th></tr></thead>
+              <tbody>
+                <tr><td>Groups by</td><td>None — raw rows, one per event</td></tr>
+                <tr><td>Sorts by</td><td>Client-specified; most-recent-first by default</td></tr>
+                <tr><td>Filters by</td><td><code class="inline">entity_id</code> required; trigger + date narrow further</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7.4 GraphQL -->
+    <div class="subsection">
+      <h3>7.4 &nbsp;GraphQL Schema Shape</h3>
+      <p>One schema-first <code class="inline">/graphql</code> endpoint — the external, self-serve API a customer calls directly against their own account. It mirrors <code class="inline">/credits/query</code>'s filter / group-by / sort grammar field-for-field; the one deliberate difference is pagination, exposed as Relay-style cursor connections instead of the REST <code class="inline">cursor/limit</code> pair.</p>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/graphql</span>
+        </div>
+        <div class="endpoint-body">
+          <p>Single endpoint, schema-first. The API token is account-scoped, so there's no <code class="inline">account_id</code> argument anywhere in the schema — a customer can only ever see their own consumption.</p>
+
+          <div class="code-block">
+            <div class="code-label">Schema (excerpt)</div>
+            <pre># one field per REST endpoint in §7.3
+type Query {
+  creditsAccount(billingCycle: String, dateFrom: Date, dateTo: Date): CreditsAccount!
+  creditsQuery(
+    filter:  CreditsFilter
+    groupBy: [CreditsDimension!]
+    sort:    [CreditsSortInput!]
+    first: Int = 50, after: String
+  ): CreditsQueryResult!
+  creditsEvents(
+    feature: String!, entityId: ID!
+    first: Int = 50, after: String
+  ): CreditsEventConnection!
+}
+
+input CreditsFilter {   # every §7.1 filter, AND'd together
+  feature:       [String!]
+  userId:        [ID!]
+  boardId:       [ID!]
+  workflowId:    [ID!]
+  automationId:  [ID!]
+  agentId:       [ID!]
+  appId:         [ID!]
+  columnId:      [ID!]
+  objectId:      [ID!]
+  triggerType:   [String!]
+  triggerId:     [ID!]
+  overLimit:     Boolean
+  billingCycle:  String
+  dateFrom:      Date
+  dateTo:        Date
+}
+
+enum CreditsDimension {
+  FEATURE  USER_ID  ENTITY_ID  TRIGGER_TYPE
+  DATE_DAY  DATE_WEEK  DATE_MONTH
+}
+input CreditsSortInput { field: String!  order: SortOrder = DESC }
+
+type CreditsQueryResult {
+  rows:        [CreditsGroupRow!]!
+  totalCount:  Int!
+  lastUpdated: DateTime!  # §08 "last updated" requirement
+}
+type CreditsGroupRow {
+  dimensions: [DimensionValue!]!
+  credits:    Float!
+  count:      Int!
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-label">Example query — top owners for one feature</div>
+            <pre>{
+  creditsQuery(
+    filter:  { feature: ["ai_workflows"], billingCycle: "2026-07" }
+    groupBy: [USER_ID]
+    sort:    [{ field: "credits", order: DESC }]
+    first: 20
+  ) {
+    rows { dimensions { key value } credits }
+    totalCount
+    lastUpdated
+  }
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-label">Response</div>
+            <pre>{
+  "rows": [
+    { "dimensions": [{ "key": "user_id", "value": "u_8831" }], "credits": 4120 },
+    …
+  ],
+  "totalCount": 340,
+  "lastUpdated": "2026-07-05T09:14:00Z"
+}</pre>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Axis</th><th>Behaviour</th></tr></thead>
+              <tbody>
+                <tr><td>Groups by</td><td>Same <code class="inline">CreditsDimension</code> enum as REST's <code class="inline">group_by</code> — one contract, two transports</td></tr>
+                <tr><td>Sorts by</td><td>Any requested dimension or the <code class="inline">credits</code>/<code class="inline">count</code> metric, same as REST</td></tr>
+                <tr><td>Paginates by</td><td><code class="inline">first</code>/<code class="inline">after</code> + <code class="inline">pageInfo</code> — Relay connections, not <code class="inline">cursor/limit</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Metering 2.0 · Product Requirements · §07 Contract Against Product Metering</footer>
+
+</body>
+</html>
