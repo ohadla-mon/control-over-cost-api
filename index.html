@@ -606,9 +606,68 @@ type CreditsGroupRow {
     </div>
   </section>
 
+  <!-- ═══════════════════════════════════════════════
+       §08  Privacy & data freshness
+  ═══════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-number">Section 08</div>
+    <h2>Privacy &amp; Data Freshness</h2>
+
+    <!-- Decision 1: Privacy -->
+    <div class="subsection">
+      <h3>Decision — Privacy by Surface, Not by Data</h3>
+      <p>Capture Notetaker data at meeting grain for internal support audit, but never expose meeting names or participant lists to the account admin — a private calendar meeting must stay private. The admin surface aggregates to the user level (organizer, meeting count, total duration, cost). Raw meeting detail is access-controlled to support/CX roles for dispute resolution only.</p>
+
+      <div class="note">
+        <div class="note-icon">💡</div>
+        <p><strong>Collect granular, redact at the surface.</strong> This keeps two forces in balance: internal ability to trace every credit (for trust and audit), and a customer-facing surface that never leaks sensitive content. The same principle generalizes — any future feature with sensitive context stores it in access-controlled detail and surfaces only what is safe.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>Data available</th><th>Access</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Internal / audit</td><td>Full meeting grain — names, participants, duration, credits</td><td>Support / CX roles only</td></tr>
+            <tr><td>Account admin surface</td><td>Aggregated to user level — organizer, meeting count, total duration, cost</td><td>Account admins</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Decision 2: Freshness -->
+    <div class="subsection">
+      <h3>Decision — Freshness &amp; "Last Updated"</h3>
+      <p>Today the data refreshes a few times a day (batch, via Big Brain); the account meter is closer to live than the breakdowns. Until near-real-time lands, the read contract must expose a <strong>"last updated" timestamp</strong> and every surface shows it, so no number pretends to be real-time.</p>
+
+      <div class="note">
+        <div class="note-icon">⚠️</div>
+        <p>Enforcement/blocking continues to run off the <strong>live metering service</strong>, independent of this reporting data — the two pipelines are intentionally separate.</p>
+      </div>
+
+      <div class="axis-grid">
+        <div class="axis-card">
+          <h4>Reporting data</h4>
+          <p>Batch-refreshed a few times per day. Every surface displays a "last updated" timestamp — no number is presented as real-time.</p>
+        </div>
+        <div class="axis-card">
+          <h4>Enforcement / blocking</h4>
+          <p>Runs off the live metering service, independent of reporting. Not affected by reporting lag.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <div class="note-icon">🔮</div>
+        <p><strong>Credits → currency (future).</strong> Users don't intuitively know what a credit is worth. A later iteration adds an optional credits-to-dollars translation, likely an account-level admin setting — captured here as a downstream need, out of scope for v1 (see §09).</p>
+      </div>
+    </div>
+
+  </section>
+
 </main>
 
-<footer>Metering 2.0 · Product Requirements · §07 Contract Against Product Metering</footer>
+<footer>Metering 2.0 · Product Requirements · §07–§08</footer>
 
 </body>
 </html>
